@@ -1,8 +1,26 @@
-import React from "react";
+import React, { useState } from "react";
 import heroImage from "../assets/heroImage.png"; 
 import { assets, cities } from "../assets/assets";
 
 const Hero = () => {
+  const {navigate, getToken, axios, setSearchedCities} = useAppContext()
+  const [destination, setDestination] = useState("")
+  const onSearch = async (e)=>{
+    e.preventDefault();
+    navigate(`/rooms?destination=${destination}`)
+    //call api to save recent searched city
+    await axios.post('/api/user/store-recent-search', {recentSearchedCity: destination}, {headers: { Authorization: `Bearer ${await getToken()}`}});
+
+    //add destination to searchedCities max 3 recent searched cities
+    setSearchedCities((prevSearchedCities)=>{
+      const updatedSearchedCities = [...prevSearchedCities, destination];
+      if (updatedSearchedCities.length > 3){
+        updatedSearchedCities.shift();
+      }
+      return updatedSearchedCities;
+    })
+  }
+
   return (
     <div
       className="flex flex-col items-start justify-center px-6 md:px-16 lg:px-24 xl:px-32 text-white h-screen bg-no-repeat bg-cover bg-center"
@@ -12,7 +30,7 @@ const Hero = () => {
       <p className="bg-[#49B9FF]/50 px-3.5 py-1 rounded-full mt-20">
         Trải nghiệm khách sạn đẳng cấp nhất
       </p>
-      <h1 className="font-playfair text-2xl md:text-5xl md:text-[45px] md:leading-[56px] font-bold md:font-extrabold max-w-xl mt-4">
+      <h1 className="font-playfair text-2xl md:text-5xl md:text-[45px] md:leading-14 font-bold md:font-extrabold max-w-xl mt-4">
         Khám phá điểm đến hoàn hảo
       </h1>
       <p className="max-w-130 mt-2 text-sm md:text-base">
@@ -21,7 +39,7 @@ const Hero = () => {
       </p>
 
       {/* Form tìm kiếm */}
-      <form className='bg-white text-gray-500 rounded-lg px-3 py-3  flex flex-col md:flex-row max-md:items-start gap-4 max-md:mx-auto mt-3'>
+      <form onSubmit={onSearch} className='bg-white text-gray-500 rounded-lg px-3 py-3  flex flex-col md:flex-row max-md:items-start gap-4 max-md:mx-auto mt-3'>
 
         {/* Thành phố / điểm đến */}
         <div>
@@ -29,7 +47,7 @@ const Hero = () => {
             <img src={assets.calenderIcon} alt="calenderIcon" className="h-4"/>
             <label htmlFor="destinationInput">Điểm đến</label>
           </div>
-          <input 
+          <input onChange={e=> setDestination(e.target.value)} value={destination}
             list='destinations' 
             id="destinationInput" 
             type="text" 
